@@ -13,7 +13,9 @@ import {
   X,
   Play,
   MousePointer,
-  MessageSquare
+  MessageSquare,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { PlayerStats, StationLocation } from '../types';
 import { STATIONS, PORTFOLIO_INFO } from '../data/portfolioData';
@@ -34,6 +36,8 @@ interface HUDProps {
   onToggleMouseSteer?: () => void;
   onOpenChat?: () => void;
   onOpenIntro?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -50,6 +54,8 @@ export const HUD: React.FC<HUDProps> = ({
   onToggleMouseSteer,
   onOpenChat,
   onOpenIntro,
+  theme = 'dark',
+  onToggleTheme,
 }) => {
   const [showNavMenu, setShowNavMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -203,6 +209,32 @@ export const HUD: React.FC<HUDProps> = ({
             )}
           </button>
 
+          {/* THEME TOGGLE: LIGHT / DARK MODE (Press T or Click) */}
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              className={`p-2 sm:px-3 sm:py-2 rounded-md border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 backdrop-blur-md ${
+                theme === 'light'
+                  ? 'bg-amber-100/95 border-amber-500 text-amber-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:bg-amber-200'
+                  : 'bg-[#0f172a]/90 border-indigo-400/50 text-indigo-300 hover:border-indigo-300 hover:text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]'
+              }`}
+              title="Toggle Light / Dark Mode (Key: T) - Switches day sunlit office vs night cyber atmosphere"
+            >
+              {theme === 'light' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-600 animate-spin-slow" />
+                  <span className="hidden sm:inline">LIGHT</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="hidden sm:inline">DARK</span>
+                </>
+              )}
+              <span className="text-[9px] px-1 rounded bg-black/30 text-slate-300 border border-slate-700/60 hidden lg:inline">T</span>
+            </button>
+          )}
+
           {/* Controls Help */}
           <button
             onClick={() => setShowHelp(!showHelp)}
@@ -236,6 +268,7 @@ export const HUD: React.FC<HUDProps> = ({
               <p><span className="text-cyan-400 font-bold">Hold Left-Click (no drag):</span> Drive/steer operative directly toward cursor</p>
               <p><span className="text-cyan-400 font-bold">Mouse Wheel:</span> Zoom camera in / out</p>
               <p><span className="text-cyan-400 font-bold">M Key / HUD Button:</span> Toggle Mouse Steer mode (continuous camera steer)</p>
+              <p><span className="text-amber-400 font-bold">T Key / HUD Button:</span> Toggle Light / Dark Mode (Day sunlit office vs Night cyber)</p>
               <p><span className="text-cyan-400 font-bold">Shift:</span> Cyber Thruster Sprint</p>
               <p><span className="text-cyan-400 font-bold">Space:</span> Jetpack Hover / Jump</p>
               <p><span className="text-cyan-400 font-bold">E / Tap Prompt:</span> Access Cyber Station</p>

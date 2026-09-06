@@ -16,6 +16,7 @@ interface GameCanvasProps {
   activeModal: string | null;
   mouseSteerMode?: boolean;
   onToggleMouseSteer?: () => void;
+  theme?: 'dark' | 'light';
 }
 
 export const GameCanvas: React.FC<GameCanvasProps> = ({
@@ -29,6 +30,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   activeModal,
   mouseSteerMode = false,
   onToggleMouseSteer,
+  theme = 'dark',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeModalRef = useRef(activeModal);
@@ -41,6 +43,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     scene: null as THREE.Scene | null,
     camera: null as THREE.PerspectiveCamera | null,
     renderer: null as THREE.WebGLRenderer | null,
+    ambientLight: null as THREE.AmbientLight | null,
+    dirLight: null as THREE.DirectionalLight | null,
+    fillLight: null as THREE.PointLight | null,
     playerGroup: null as THREE.Group | null,
     playerParts: {
       head: null as THREE.Mesh | null,
@@ -122,22 +127,29 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     container.appendChild(renderer.domElement);
     stateRef.current.renderer = renderer;
 
-    // 4. Atmospheric Office Lighting
-    const ambientLight = new THREE.AmbientLight(0x283548, 2.2);
+    // 4. Atmospheric Office Lighting (Day Sunlit Penthouse vs Night Cyber Atmosphere)
+    const isLightInitial = theme === 'light';
+    const ambientLight = new THREE.AmbientLight(isLightInitial ? 0xe2e8f0 : 0x283548, isLightInitial ? 3.0 : 2.2);
     scene.add(ambientLight);
+    stateRef.current.ambientLight = ambientLight;
 
-    // City & Moonlight streaming through panoramic windows
-    const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    // City & Sun / Moonlight streaming through panoramic windows
+    const dirLight = new THREE.DirectionalLight(isLightInitial ? 0xfff7ed : 0x38bdf8, isLightInitial ? 3.5 : 2.2);
     dirLight.position.set(0, 15, -20);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 1024;
     dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight);
+    stateRef.current.dirLight = dirLight;
 
     // Warm Interior Office Light
-    const fillLight = new THREE.PointLight(0xffedd5, 1.8, 20);
+    const fillLight = new THREE.PointLight(isLightInitial ? 0xffffff : 0xffedd5, isLightInitial ? 1.6 : 1.8, 20);
     fillLight.position.set(0, 4.8, 0);
     scene.add(fillLight);
+    stateRef.current.fillLight = fillLight;
+
+    scene.background = new THREE.Color(isLightInitial ? 0xb4d3f5 : 0x060a14);
+    scene.fog = new THREE.FogExp2(isLightInitial ? 0xcbe2fb : 0x060a14, 0.014);
 
     // Build the 3D Office Room, Panoramic Windows, City Skyline, Desks, and 3D Folders
     const officeObjects = buildOfficeRoom(scene);
@@ -717,6 +729,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       renderer.dispose();
     };
   }, []);
+
+  // Handle dynamic light/dark theme transition
+  useEffect(() => {
+    const { scene, ambientLight, dirLight, fillLight } = stateRef.current;
+    if (!scene || !ambientLight || !dirLight || !fillLight) return;
+    const isLight = theme === 'light';
+
+    scene.background = new THREE.Color(isLight ? 0xb4d3f5 : 0x060a14);
+    scene.fog = new THREE.FogExp2(isLight ? 0xcbe2fb : 0x060a14, 0.014);
+
+    ambientLight.color.setHex(isLight ? 0xe2e8f0 : 0x283548);
+    ambientLight.intensity = isLight ? 3.0 : 2.2;
+
+    dirLight.color.setHex(isLight ? 0xfff7ed : 0x38bdf8);
+    dirLight.intensity = isLight ? 3.5 : 2.2;
+
+    fillLight.color.setHex(isLight ? 0xffffff : 0xffedd5);
+    fillLight.intensity = isLight ? 1.6 : 1.8;
+  }, [theme]);
 
   // Handle on-screen Action Button (mobile / touch)
   useEffect(() => {

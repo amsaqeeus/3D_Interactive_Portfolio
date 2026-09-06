@@ -20,6 +20,48 @@ export default function App() {
   const [targetTeleportStation, setTargetTeleportStation] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(() => retroAudio.isSongPlaying());
 
+  // Theme State: 'dark' (cyber night neon) vs 'light' (sunlit daytime penthouse)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('asmaa_portfolio_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {}
+    return 'dark';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('asmaa_portfolio_theme', theme);
+    } catch {}
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    retroAudio.playInteract();
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Keyboard shortcut 'T' to toggle theme anywhere
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === 't' || e.key === 'T') {
+        toggleTheme();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Player Stats with localStorage state loading
   const [stats, setStats] = useState<PlayerStats>(() => {
     try {
@@ -171,6 +213,7 @@ export default function App() {
             activeModal={activeStationModal ? activeStationModal.id : (isExportModalOpen ? 'export' : null)}
             mouseSteerMode={mouseSteerMode}
             onToggleMouseSteer={() => setMouseSteerMode((prev) => !prev)}
+            theme={theme}
           />
 
           {/* Heads Up Display Overlay */}
@@ -203,6 +246,8 @@ export default function App() {
               retroAudio.playInteract();
               setShowIntro(true);
             }}
+            theme={theme}
+            onToggleTheme={toggleTheme}
           />
 
           {/* MOBILE VIRTUAL JOYSTICK & ACTION BUTTONS (Touch Only) */}
@@ -281,6 +326,8 @@ export default function App() {
             retroAudio.playInteract();
             setIsChatModalOpen(true);
           }}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       )}
 
